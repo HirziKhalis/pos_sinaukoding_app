@@ -35,5 +35,14 @@ export async function POST(req: Request) {
     maxAge: 60 * 60 * 24 * 7,
   })
 
+  cookieStore.set({
+    name: 'role',
+    value: user.role, // e.g. ADMIN | CASHIER
+    httpOnly: false, // readable by middleware
+    path: '/',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
+  })
+
   return Response.json({ message: 'Login successful' })
 }
