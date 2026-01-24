@@ -20,6 +20,8 @@ model User {
   role         String   @default("CASHIER")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  orders Order[]
 }
 
 model Product {
@@ -31,4 +33,29 @@ model Product {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id        String   @id @default(uuid())
+  total     Int // total in cents
+  createdAt DateTime @default(now())
+
+  cashierId String
+  cashier   User   @relation(fields: [cashierId], references: [id])
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id       String @id @default(uuid())
+  quantity Int
+  price    Int
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
 }
