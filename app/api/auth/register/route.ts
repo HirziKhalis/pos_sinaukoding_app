@@ -1,12 +1,14 @@
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { hashPassword } from '@/lib/auth'
+import bcrypt from 'bcryptjs'
 
 export async function POST(req: Request) {
-  const { email, password } = await req.json()
+  const body = await req.json()
+  const { email, password, role = 'CASHIER' } = body
 
   if (!email || !password) {
-    return Response.json(
-      { error: 'Missing email or password' },
+    return NextResponse.json(
+      { message: 'Email and password are required' },
       { status: 400 }
     )
   }
@@ -16,23 +18,24 @@ export async function POST(req: Request) {
   })
 
   if (existingUser) {
-    return Response.json(
-      { error: 'User already exists' },
+    return NextResponse.json(
+      { message: 'Email already registered' },
       { status: 409 }
     )
   }
 
-  const passwordHash = await hashPassword(password)
+  const passwordHash = await bcrypt.hash(password, 10)
 
-  const user = await prisma.user.create({
+  await prisma.user.create({
     data: {
       email,
       passwordHash,
+      role,
     },
   })
 
-  return Response.json({
-    id: user.id,
-    email: user.email,
-  })
+  return NextResponse.json(
+    { message: 'User registered successfully' },
+    { status: 201 }
+  )
 }

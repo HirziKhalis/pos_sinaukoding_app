@@ -4,34 +4,37 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
     const router = useRouter()
     const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
     const [error, setError] = useState('')
+    const [success, setSuccess] = useState('')
     const [loading, setLoading] = useState(false)
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
         setError('')
+        setSuccess('')
         setLoading(true)
 
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email, password }),
-        })
+        // Simulate API call for now or implement if route exists
+        try {
+            // For now, let's just simulate a success message
+            // const res = await fetch('/api/auth/forgot-password', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({ email }),
+            // })
 
-        setLoading(false)
+            // Artificial delay
+            await new Promise(resolve => setTimeout(resolve, 1500))
 
-        if (!res.ok) {
-            setError('Invalid email or password')
-            return
+            setSuccess('If an account exists for this email, you will receive a password reset link shortly.')
+        } catch (err) {
+            setError('Something went wrong. Please try again later.')
+        } finally {
+            setLoading(false)
         }
-
-        router.push('/dashboard/checkout')
     }
 
     return (
@@ -44,7 +47,7 @@ export default function LoginPage() {
                 }}
             />
 
-            {/* Login Card */}
+            {/* Forgot Password Card */}
             <div className="relative z-10 w-full max-w-[480px] px-4 md:ml-32">
                 <div className="bg-white rounded-[40px] shadow-2xl p-8 md:p-12">
                     {/* Logo Section */}
@@ -57,8 +60,8 @@ export default function LoginPage() {
 
                     {/* Header */}
                     <div className="text-center mb-10">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back!</h1>
-                        <p className="text-gray-400 text-sm">Please enter your username and password here!</p>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Forgot Password</h1>
+                        <p className="text-gray-400 text-sm">Enter your email address and we'll send you a link to reset your password.</p>
                     </div>
 
                     {error && (
@@ -67,15 +70,21 @@ export default function LoginPage() {
                         </div>
                     )}
 
+                    {success && (
+                        <div className="bg-green-50 text-green-600 text-xs p-3 rounded-xl mb-6 text-center">
+                            {success}
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Username Field */}
+                        {/* Email Field */}
                         <div className="space-y-2">
                             <label className="block text-sm font-semibold text-gray-700 ml-1">
-                                Username
+                                Email Address
                             </label>
                             <input
                                 type="email"
-                                placeholder="Username"
+                                placeholder="Enter your email"
                                 className="w-full px-5 py-3.5 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-300 text-gray-900"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -83,45 +92,19 @@ export default function LoginPage() {
                             />
                         </div>
 
-                        {/* Password Field */}
-                        <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700 ml-1">
-                                Password
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type="password"
-                                    placeholder="Password"
-                                    className="w-full pl-5 pr-12 py-3.5 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-300 text-gray-900"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="flex justify-end pr-1">
-                                <Link
-                                    href="/forgot-password"
-                                    className="text-[10px] text-gray-400 hover:text-blue-500 transition-colors"
-                                >
-                                    Forgot Password?
-                                </Link>
-                            </div>
-                        </div>
-
-                        {/* Login Button */}
+                        {/* Submit Button */}
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={loading || !!success}
                             className="w-full bg-[#3b71f3] text-white py-4 rounded-2xl font-semibold shadow-lg shadow-blue-500/30 hover:bg-[#2a5bd7] active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 mt-4"
                         >
-                            {loading ? 'Logging in...' : 'Login'}
+                            {loading ? 'Sending link...' : 'Send Reset Link'}
                         </button>
 
-                        {/* Register Link */}
+                        {/* Back to Login Link */}
                         <div className="text-center text-sm pt-4">
-                            <span className="text-gray-400">Don't have an account? </span>
-                            <Link href="/register" className="text-[#3b71f3] font-semibold hover:underline">
-                                Register
+                            <Link href="/login" className="text-[#3b71f3] font-semibold hover:underline">
+                                Back to Login
                             </Link>
                         </div>
                     </form>
