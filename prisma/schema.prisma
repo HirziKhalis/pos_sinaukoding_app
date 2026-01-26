@@ -16,8 +16,9 @@ datasource db {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
+  name         String?
   passwordHash String
-  role         String   @default("CASHIER")
+  role         String   @default("CASHIER") // ADMIN, CASHIER
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -25,11 +26,14 @@ model User {
 }
 
 model Product {
-  id       String  @id @default(uuid())
-  name     String
-  price    Int
-  stock    Int
-  isActive Boolean @default(true)
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  price       Int
+  stock       Int     @default(0)
+  category    String  @default("FOOD") // FOOD, BEVERAGE, DESSERT
+  imageUrl    String?
+  isActive    Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -38,8 +42,18 @@ model Product {
 }
 
 model Order {
-  id        String   @id @default(uuid())
-  total     Int // total in cents
+  id           String  @id @default(uuid())
+  orderNumber  String  @unique // e.g. ORDR#1234567890
+  customerName String
+  tableNumber  String?
+  orderType    String  @default("DINE_IN") // DINE_IN, TAKE_AWAY
+
+  subTotal       Int
+  tax            Int
+  total          Int
+  receivedAmount Int
+  changeAmount   Int
+
   createdAt DateTime @default(now())
 
   cashierId String
@@ -51,7 +65,7 @@ model Order {
 model OrderItem {
   id       String @id @default(uuid())
   quantity Int
-  price    Int
+  price    Int // Price at the time of purchase
 
   orderId String
   order   Order  @relation(fields: [orderId], references: [id])

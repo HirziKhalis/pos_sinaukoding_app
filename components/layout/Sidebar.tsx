@@ -1,17 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 
 export default function Sidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false)
+    const [role, setRole] = useState<'ADMIN' | 'CASHIER' | null>(null)
     const pathname = usePathname()
 
-    const navItems = [
+    useEffect(() => {
+        const cookies = document.cookie.split('; ')
+        const roleCookie = cookies.find(row => row.startsWith('role='))
+        if (roleCookie) {
+            setRole(roleCookie.split('=')[1] as 'ADMIN' | 'CASHIER')
+        }
+    }, [])
+
+    const adminItems = [
         {
             name: 'Dashboard',
-            href: '/dashboard',
+            href: '/dashboard/admin',
             icon: (
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect width="7" height="7" x="3" y="3" rx="1" />
@@ -61,13 +70,64 @@ export default function Sidebar() {
         },
     ]
 
+    const cashierItems = [
+        {
+            name: 'Menu',
+            href: '/dashboard',
+            icon: (
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="7" height="7" x="3" y="3" rx="1" />
+                    <rect width="7" height="7" x="14" y="3" rx="1" />
+                    <rect width="7" height="7" x="14" y="14" rx="1" />
+                    <rect width="7" height="7" x="3" y="14" rx="1" />
+                </svg>
+            ),
+        },
+        {
+            name: 'Sales Report',
+            href: '/dashboard/reports',
+            icon: (
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 2H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z" />
+                    <path d="M12 18h.01" />
+                    <path d="M9 7h6" />
+                    <path d="M9 11h6" />
+                    <path d="M9 15h2" />
+                    <rect x="10" y="2" width="4" height="2" />
+                </svg>
+            ),
+        },
+        {
+            name: 'Settings',
+            href: '/dashboard/settings',
+            icon: (
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                    <circle cx="12" cy="12" r="3" />
+                </svg>
+            ),
+        },
+    ]
+
+    const navItems = role === 'ADMIN' ? adminItems : cashierItems
+
     return (
         <aside
             className={`bg-white border-r h-full flex flex-col transition-all duration-300 ease-in-out relative ${isCollapsed ? 'w-20' : 'w-64'
                 }`}
         >
+            {/* Collapse Toggle Button - Absolute when Expanded */}
+            {!isCollapsed && (
+                <button
+                    onClick={() => setIsCollapsed(true)}
+                    className="absolute -right-4 top-8 w-8 h-8 bg-white border border-[#E8EFFE] rounded-full flex items-center justify-center text-[#3b71f3] hover:bg-[#F5F8FF] transition-all duration-300 shadow-sm hover:shadow-md z-20"
+                >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                </button>
+            )}
+
             {/* Logo Section */}
-            <div className={`flex items-center gap-4 px-6 py-8 h-24 overflow-hidden relative`}>
+            <div className={`flex items-center gap-4 px-6 py-8 h-24 overflow-hidden relative border-b border-gray-50`}>
                 <div
                     className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20"
                     style={{ background: "linear-gradient(to right, #4C3BCF, #3572EF)" }}
@@ -79,21 +139,11 @@ export default function Sidebar() {
                         PadiPos
                     </span>
                 )}
-
-                {/* Collapse Toggle Button - Absolute when Expanded */}
-                {!isCollapsed && (
-                    <button
-                        onClick={() => setIsCollapsed(true)}
-                        className="absolute -right-4 top-8 w-8 h-8 bg-white border border-[#E8EFFE] rounded-full flex items-center justify-center text-[#3b71f3] hover:bg-[#F5F8FF] transition-all duration-300 shadow-sm hover:shadow-md z-20"
-                    >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-                    </button>
-                )}
             </div>
 
             {/* Collapse Toggle Button - Centered in Column when Collapsed */}
             {isCollapsed && (
-                <div className="flex w-full justify-center py-4 border-b border-gray-50">
+                <div className="flex w-full justify-center py-6 border-b border-gray-50">
                     <button
                         onClick={() => setIsCollapsed(false)}
                         className="w-10 h-10 bg-white border border-[#E8EFFE] rounded-full flex items-center justify-center text-[#3b71f3] hover:bg-[#F5F8FF] transition-all duration-300 shadow-sm hover:shadow-md"
@@ -122,7 +172,7 @@ export default function Sidebar() {
                             </div>
 
                             {!isCollapsed && (
-                                <span className={`text-base whitespace-nowrap animate-in fade-in slide-in-from-left-4 duration-300`}>
+                                <span className={`text-base font-bold whitespace-nowrap animate-in fade-in slide-in-from-left-4 duration-300`}>
                                     {item.name}
                                 </span>
                             )}

@@ -38,7 +38,7 @@ export default function LoginPage() {
             if (data.user?.role === 'ADMIN') {
                 router.push('/dashboard/admin')
             } else {
-                router.push('/dashboard/checkout')
+                router.push('/dashboard')
             }
         } catch (err) {
             setError('Connection failed. Please check your internet.')
