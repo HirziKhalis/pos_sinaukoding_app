@@ -52,7 +52,8 @@ export default function ForgotPasswordPage() {
                 <div className="bg-white rounded-[40px] shadow-2xl p-8 md:p-12">
                     {/* Logo Section */}
                     <div className="flex items-center justify-center gap-2 mb-8">
-                        <div className="w-10 h-10 bg-[#3b71f3] rounded-full flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20"
+                            style={{ background: "linear-gradient(to right, #4C3BCF, #3572EF)" }}>
                             <span className="text-white font-bold text-xl">P</span>
                         </div>
                         <span className="text-[#3b71f3] font-bold text-xl tracking-tight">PadiPos</span>

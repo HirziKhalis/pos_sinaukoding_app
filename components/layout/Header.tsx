@@ -1,14 +1,28 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+
 export default function Header() {
+    const router = useRouter()
+
+    async function handleLogout() {
+        try {
+            const res = await fetch('/api/auth/logout', {
+                method: 'POST',
+            })
+
+            if (res.ok) {
+                router.push('/login')
+                router.refresh()
+            }
+        } catch (error) {
+            console.error('Logout failed:', error)
+        }
+    }
+
     return (
         <header className="h-18 bg-white border-b flex items-center justify-between px-6">
-            <div className="flex items-center gap-8 flex-1">
-                {/* Logo */}
-                <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 bg-[#3b71f3] rounded-full flex items-center justify-center">
-                        <span className="text-white font-bold text-xl">P</span>
-                    </div>
-                </div>
-
+            <div className="flex items-center flex-1">
                 {/* Search Bar */}
                 <div className="relative w-full max-w-md">
                     <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
@@ -49,7 +63,11 @@ export default function Header() {
                 </div>
 
                 {/* Logout */}
-                <button className="w-9 h-9 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                <button
+                    onClick={handleLogout}
+                    className="w-9 h-9 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Logout"
+                >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>
                 </button>
             </div>
