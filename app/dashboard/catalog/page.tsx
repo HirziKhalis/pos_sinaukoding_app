@@ -7,7 +7,9 @@ import ManageMenuPanel from '@/components/admin/ManageMenuPanel'
 
 export default function CatalogPage() {
     const [products, setProducts] = useState<any[]>([])
+    const [editingProduct, setEditingProduct] = useState<any>(null)
     const [loading, setLoading] = useState(true)
+    const [activeCategory, setActiveCategory] = useState('all')
 
     useEffect(() => {
         async function fetchProducts() {
@@ -28,7 +30,10 @@ export default function CatalogPage() {
         <div className="flex h-full bg-[#f8faff]">
             {/* Menu Section */}
             <div className="flex-1 p-8 overflow-y-auto custom-scrollbar">
-                <CategoryTabs />
+                <CategoryTabs
+                    activeCategory={activeCategory}
+                    onSelect={(id) => setActiveCategory(id)}
+                />
 
                 <div className="flex items-center justify-between mb-8 mt-4">
                     <h2 className="text-2xl font-bold text-gray-900">List Menu</h2>
@@ -46,7 +51,12 @@ export default function CatalogPage() {
                 ) : products.length > 0 ? (
                     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {products.map((product) => (
-                            <MenuCard key={product.id} mode="ADMIN" product={product} />
+                            <MenuCard
+                                key={product.id}
+                                mode="ADMIN"
+                                product={product}
+                                onEdit={(p) => setEditingProduct(p)}
+                            />
                         ))}
                     </div>
                 ) : (
@@ -58,7 +68,10 @@ export default function CatalogPage() {
             </div>
 
             {/* Admin Action Panel */}
-            <ManageMenuPanel />
+            <ManageMenuPanel
+                editingProduct={editingProduct}
+                onClose={() => setEditingProduct(null)}
+            />
         </div>
     )
 }

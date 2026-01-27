@@ -1,8 +1,13 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
-export default function ManageMenuPanel() {
+type ManageMenuPanelProps = {
+    editingProduct?: any
+    onClose?: () => void
+}
+
+export default function ManageMenuPanel({ editingProduct, onClose }: ManageMenuPanelProps) {
     const [isAdding, setIsAdding] = useState(false)
     const [loading, setLoading] = useState(false)
     const [formData, setFormData] = useState({
@@ -14,6 +19,30 @@ export default function ManageMenuPanel() {
         imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop'
     })
 
+    useEffect(() => {
+        if (editingProduct) {
+            setIsAdding(true)
+            setFormData({
+                name: editingProduct.name,
+                description: editingProduct.description || '',
+                price: editingProduct.price.toString(),
+                stock: editingProduct.stock?.toString() || '0',
+                category: editingProduct.category,
+                imageUrl: editingProduct.imageUrl || 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop'
+            })
+        } else {
+            setIsAdding(false)
+            setFormData({
+                name: '',
+                description: '',
+                price: '',
+                stock: '',
+                category: 'FOOD',
+                imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop'
+            })
+        }
+    }, [editingProduct])
+
     const categories = [
         { label: 'Foods', value: 'FOOD' },
         { label: 'Beverages', value: 'BEVERAGE' },
@@ -24,23 +53,21 @@ export default function ManageMenuPanel() {
         e.preventDefault()
         setLoading(true)
         try {
-            const res = await fetch('/api/menus', {
-                method: 'POST',
+            const url = editingProduct ? `/api/products/${editingProduct.id}` : '/api/menus'
+            const method = editingProduct ? 'PUT' : 'POST'
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            })
-            if (res.ok) {
-                // Reset and close
-                setIsAdding(false)
-                setFormData({
-                    name: '',
-                    description: '',
-                    price: '',
-                    stock: '',
-                    category: 'FOOD',
-                    imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop'
+                body: JSON.stringify({
+                    ...formData,
+                    price: parseInt(formData.price),
+                    stock: parseInt(formData.stock),
                 })
-                // Trigger refresh would be nice, but for now we'll just close
+            })
+
+            if (res.ok) {
+                if (onClose) onClose()
                 window.location.reload()
             }
         } catch (error) {
@@ -50,23 +77,49 @@ export default function ManageMenuPanel() {
         }
     }
 
+    async function handleDelete() {
+        if (!editingProduct) return
+        if (!confirm('Are you sure you want to delete this menu?')) return
+
+        setLoading(true)
+        try {
+            const res = await fetch(`/api/products/${editingProduct.id}`, {
+                method: 'DELETE'
+            })
+
+            if (res.ok) {
+                if (onClose) onClose()
+                window.location.reload()
+            }
+        } catch (error) {
+            console.error('Failed to delete menu:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleClose = () => {
+        if (onClose) onClose()
+        setIsAdding(false)
+    }
+
     return (
         <aside className="w-[450px] bg-white border-l p-8 flex flex-col h-full overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between mb-10">
                 <h2 className="text-2xl font-black text-[#2D3036] tracking-tight">
-                    {isAdding ? 'Fill Information' : 'Add Menu'}
+                    {editingProduct ? 'Edit Menu' : isAdding ? 'Fill Information' : 'Add Menu'}
                 </h2>
                 <button
-                    onClick={() => setIsAdding(!isAdding)}
-                    className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ${isAdding
+                    onClick={() => (isAdding || editingProduct) ? handleClose() : setIsAdding(true)}
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ${(isAdding || editingProduct)
                         ? 'bg-red-50 text-red-500 shadow-red-500/10'
                         : 'bg-[#3b71f3] text-white shadow-blue-500/20 hover:scale-105'
                         }`}
                 >
                     <svg
                         width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
-                        className={`transition-transform duration-300 ${isAdding ? 'rotate-45' : ''}`}
+                        className={`transition-transform duration-300 ${(isAdding || editingProduct) ? 'rotate-45' : ''}`}
                     >
                         <path d="M5 12h14" /><path d="M12 5v14" />
                     </svg>
@@ -74,7 +127,7 @@ export default function ManageMenuPanel() {
             </div>
 
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                {isAdding ? (
+                {(isAdding || editingProduct) ? (
                     <form onSubmit={handleSubmit} className="space-y-8 pb-10">
                         {/* Menu Image Preview / Choice */}
                         <div className="space-y-3">
@@ -162,20 +215,33 @@ export default function ManageMenuPanel() {
                             </div>
                         </div>
 
-                        <button
-                            disabled={loading}
-                            type="submit"
-                            className="w-full bg-[#1e4eb0] text-white py-5 rounded-3xl font-black text-sm shadow-xl shadow-blue-900/10 hover:bg-[#1a44a0] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
-                        >
-                            {loading ? (
-                                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
-                                    Save Menu
-                                </>
+                        <div className="flex gap-4">
+                            {editingProduct && (
+                                <button
+                                    onClick={handleDelete}
+                                    disabled={loading}
+                                    type="button"
+                                    className="flex-1 bg-red-50 text-red-500 py-5 rounded-3xl font-black text-sm hover:bg-red-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
+                                    Delete
+                                </button>
                             )}
-                        </button>
+                            <button
+                                disabled={loading}
+                                type="submit"
+                                className={`${editingProduct ? 'flex-[2]' : 'w-full'} bg-[#1e4eb0] text-white py-5 rounded-3xl font-black text-sm shadow-xl shadow-blue-900/10 hover:bg-[#1a44a0] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50`}
+                            >
+                                {loading ? (
+                                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
+                                        {editingProduct ? 'Update Menu' : 'Save Menu'}
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </form>
                 ) : (
                     <div

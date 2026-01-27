@@ -7,10 +7,14 @@ export async function POST(request: Request) {
         const user = await requireAuth()
 
         const body = await request.json()
-        const { items } = body
+        const { items, customerName, tableNumber, orderType, subTotal, tax, total, receivedAmount, changeAmount } = body
 
         if (!items || items.length === 0) {
             return new Response('No items', { status: 400 })
+        }
+
+        if (!customerName) {
+            return new Response('Customer name is required', { status: 400 })
         }
 
         const productIds = items.map((i: any) => i.productId)
@@ -22,34 +26,30 @@ export async function POST(request: Request) {
             },
         })
 
-        // Validate stock + calculate total
-        let total = 0
-
-        for (const item of items) {
-            const product = products.find(p => p.id === item.productId)
-
-            if (!product) {
-                return new Response('Product not found', { status: 404 })
-            }
-
-            if (product.stock < item.quantity) {
-                return new Response('Insufficient stock', { status: 400 })
-            }
-
-            total += product.price * item.quantity
-        }
+        // Generate Order Number: ORDR#YYYYMMDDHHMMSS
+        const orderNumber = `ORDR#${new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14)}`
 
         // 🔒 Transaction: order + items + stock update
         const order = await prisma.$transaction(async (tx) => {
             const createdOrder = await tx.order.create({
                 data: {
-                    cashierId: user.userId,
+                    orderNumber,
+                    customerName,
+                    tableNumber,
+                    orderType: orderType || 'DINE_IN',
+                    subTotal,
+                    tax,
                     total,
+                    receivedAmount: receivedAmount || total,
+                    changeAmount: changeAmount || 0,
+                    cashierId: user.userId,
                 },
             })
 
             for (const item of items) {
-                const product = products.find(p => p.id === item.productId)!
+                const product = products.find(p => p.id === item.productId)
+                if (!product) throw new Error(`Product ${item.productId} not found`)
+                if (product.stock < item.quantity) throw new Error(`Insufficient stock for ${product.name}`)
 
                 await tx.orderItem.create({
                     data: {

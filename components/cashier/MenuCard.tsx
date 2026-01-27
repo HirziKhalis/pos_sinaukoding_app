@@ -8,9 +8,11 @@ type MenuCardProps = {
         imageUrl?: string | null
         category: string
     }
+    onEdit?: (product: any) => void
+    onAdd?: (product: any) => void
 }
 
-export default function MenuCard({ mode = 'CASHIER', product }: MenuCardProps) {
+export default function MenuCard({ mode = 'CASHIER', product, onEdit, onAdd }: MenuCardProps) {
     return (
         <div className="bg-white rounded-3xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-all group overflow-hidden h-fit">
             {/* Image Container with Badge */}
@@ -43,11 +45,17 @@ export default function MenuCard({ mode = 'CASHIER', product }: MenuCardProps) {
                     <span className="text-[10px] text-gray-400 font-medium ml-1">/portion</span>
                 </div>
                 {mode === 'CASHIER' ? (
-                    <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-[#3b71f3] hover:bg-blue-500 hover:text-white transition-all shadow-sm">
+                    <button
+                        onClick={() => onAdd?.(product)}
+                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-[#3b71f3] hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                    >
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
                     </button>
                 ) : (
-                    <button className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-100 text-gray-400 hover:bg-gray-50 transition-all">
+                    <button
+                        onClick={() => onEdit?.(product)}
+                        className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-100 text-gray-400 hover:bg-gray-50 transition-all"
+                    >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" x2="21" y1="14" y2="3" /></svg>
                     </button>
                 )}
