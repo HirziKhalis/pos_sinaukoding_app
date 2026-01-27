@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
 type ManageMenuPanelProps = {
     editingProduct?: any
@@ -18,6 +18,36 @@ export default function ManageMenuPanel({ editingProduct, onClose }: ManageMenuP
         category: 'FOOD',
         imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop'
     })
+
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setLoading(true)
+        const uploadData = new FormData()
+        uploadData.append('file', file)
+
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: uploadData,
+            })
+
+            if (res.ok) {
+                const { imageUrl } = await res.json()
+                setFormData(prev => ({ ...prev, imageUrl }))
+            } else {
+                alert('Failed to upload image')
+            }
+        } catch (error) {
+            console.error('Upload failed:', error)
+            alert('An error occurred during upload')
+        } finally {
+            setLoading(false)
+        }
+    }
 
     useEffect(() => {
         if (editingProduct) {
@@ -132,7 +162,10 @@ export default function ManageMenuPanel({ editingProduct, onClose }: ManageMenuP
                         {/* Menu Image Preview / Choice */}
                         <div className="space-y-3">
                             <label className="block text-sm font-bold text-gray-400 ml-1 uppercase tracking-wider">Menu Picture</label>
-                            <div className="relative h-56 w-full rounded-[32px] overflow-hidden bg-gray-50 border-2 border-dashed border-gray-100 flex items-center justify-center group cursor-pointer">
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                className="relative h-56 w-full rounded-[32px] overflow-hidden bg-gray-50 border-2 border-dashed border-gray-100 flex items-center justify-center group cursor-pointer"
+                            >
                                 <img
                                     src={formData.imageUrl}
                                     alt="Preview"
@@ -142,6 +175,13 @@ export default function ManageMenuPanel({ editingProduct, onClose }: ManageMenuP
                                     <span className="bg-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm">Change Image</span>
                                 </div>
                             </div>
+                            <input
+                                type="file"
+                                className="hidden"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                accept="image/*"
+                            />
                         </div>
 
                         {/* Name Field */}
