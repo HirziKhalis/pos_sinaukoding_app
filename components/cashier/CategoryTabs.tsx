@@ -21,23 +21,32 @@ const categories = [
     },
 ]
 
-export default function CategoryTabs() {
+type CategoryTabsProps = {
+    activeCategory: string
+    onSelect: (id: string) => void
+}
+
+export default function CategoryTabs({ activeCategory, onSelect }: CategoryTabsProps) {
     return (
         <div className="flex gap-4 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.map((cat, index) => (
-                <button
-                    key={cat.id}
-                    className={`flex items-center gap-3 px-8 py-4 rounded-2xl min-w-[160px] transition-all border ${index === 0
+            {categories.map((cat) => {
+                const isActive = activeCategory === cat.id
+                return (
+                    <button
+                        key={cat.id}
+                        onClick={() => onSelect(cat.id)}
+                        className={`flex items-center gap-3 px-8 py-4 rounded-2xl min-w-[160px] transition-all border ${isActive
                             ? 'bg-[#3b71f3] border-[#3b71f3] text-white shadow-lg shadow-blue-500/25'
                             : 'bg-white border-gray-100 text-gray-400 hover:border-blue-200'
-                        }`}
-                >
-                    <div className={`${index === 0 ? 'text-white' : 'text-gray-300'}`}>
-                        {cat.icon}
-                    </div>
-                    <span className="font-semibold text-base">{cat.name}</span>
-                </button>
-            ))}
+                            }`}
+                    >
+                        <div className={`${isActive ? 'text-white' : 'text-gray-300'}`}>
+                            {cat.icon}
+                        </div>
+                        <span className="font-semibold text-base">{cat.name}</span>
+                    </button>
+                )
+            })}
         </div>
     )
 }
