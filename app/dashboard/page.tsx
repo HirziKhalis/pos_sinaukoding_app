@@ -39,24 +39,25 @@ export default function DashboardPage() {
       return cat === active || cat === active.replace(/s$/, '')
     })
 
-  const addToCart = (product: any) => {
+  const addToCart = (product: any, note: string = '') => {
     setCart(currentCart => {
-      const existing = currentCart.find(item => item.id === product.id)
+      const cartItemId = `${product.id}-${note}`
+      const existing = currentCart.find(item => item.cartItemId === cartItemId)
       if (existing) {
         return currentCart.map(item =>
-          item.id === product.id
+          item.cartItemId === cartItemId
             ? { ...item, quantity: item.quantity + 1 }
             : item
         )
       }
-      return [...currentCart, { ...product, quantity: 1 }]
+      return [...currentCart, { ...product, cartItemId, note, quantity: 1 }]
     })
   }
 
-  const updateQuantity = (id: string, delta: number) => {
+  const updateQuantity = (cartItemId: string, delta: number) => {
     setCart(currentCart =>
       currentCart.map(item => {
-        if (item.id === id) {
+        if (item.cartItemId === cartItemId) {
           const newQty = Math.max(1, item.quantity + delta)
           return { ...item, quantity: newQty }
         }
@@ -65,8 +66,19 @@ export default function DashboardPage() {
     )
   }
 
-  const removeFromCart = (id: string) => {
-    setCart(currentCart => currentCart.filter(item => item.id !== id))
+  const removeFromCart = (cartItemId: string) => {
+    setCart(currentCart => currentCart.filter(item => item.cartItemId !== cartItemId))
+  }
+
+  const updateNote = (cartItemId: string, newNote: string) => {
+    setCart(currentCart =>
+      currentCart.map(item => {
+        if (item.cartItemId === cartItemId) {
+          return { ...item, note: newNote }
+        }
+        return item
+      })
+    )
   }
 
   const handlePay = async (details: any) => {
@@ -156,6 +168,7 @@ export default function DashboardPage() {
       <OrderPanel
         cart={cart}
         onUpdateQuantity={updateQuantity}
+        onUpdateNote={updateNote}
         onRemove={removeFromCart}
         onPay={handlePay}
       />
@@ -164,6 +177,7 @@ export default function DashboardPage() {
         isOpen={isDetailOpen}
         product={selectedProduct}
         onClose={() => setIsDetailOpen(false)}
+        onAdd={addToCart}
       />
     </div>
   )

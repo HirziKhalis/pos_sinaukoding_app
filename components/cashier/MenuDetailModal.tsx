@@ -1,15 +1,26 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 
 type MenuDetailModalProps = {
     product: any | null
     isOpen: boolean
     onClose: () => void
+    onAdd?: (product: any, note: string) => void
 }
 
-export default function MenuDetailModal({ product, isOpen, onClose }: MenuDetailModalProps) {
+export default function MenuDetailModal({ product, isOpen, onClose, onAdd }: MenuDetailModalProps) {
+    const [note, setNote] = useState('')
+
     if (!isOpen || !product) return null
+
+    const handleSubmit = () => {
+        if (onAdd) {
+            onAdd(product, note)
+            setNote('')
+            onClose()
+        }
+    }
 
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -65,6 +76,29 @@ export default function MenuDetailModal({ product, isOpen, onClose }: MenuDetail
                             <span className="text-xl font-black text-[#3b71f3]">Rp {product.price?.toLocaleString('id-ID')}</span>
                             <span className="text-gray-400 text-sm font-medium ml-1">/portion</span>
                         </div>
+
+                        {/* Separator */}
+                        <div className="border-t border-dashed border-gray-200 mt-2" />
+
+                        {/* Note Field */}
+                        <div className="space-y-3 pt-2">
+                            <label className="text-[11px] font-black text-gray-400 ml-1 uppercase tracking-widest leading-none">Catatan</label>
+                            <textarea
+                                value={note}
+                                onChange={(e) => setNote(e.target.value)}
+                                placeholder="Without egg and tofu"
+                                rows={3}
+                                className="w-full bg-gray-50/50 border border-gray-100 rounded-3xl px-6 py-4 text-xs font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-gray-200 resize-none"
+                            />
+                        </div>
+
+                        {/* Submit Button */}
+                        <button
+                            onClick={handleSubmit}
+                            className="w-full py-5 rounded-[24px] bg-[#3b71f3] text-white font-black text-sm shadow-xl shadow-blue-500/20 hover:brightness-110 active:scale-[0.98] transition-all mt-4"
+                        >
+                            Submit
+                        </button>
                     </div>
                 </div>
             </div>
