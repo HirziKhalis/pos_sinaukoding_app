@@ -5,11 +5,14 @@ import { useState } from 'react'
 type OrderPanelProps = {
     cart: any[]
     onUpdateQuantity: (id: string, delta: number) => void
+    onUpdateNote: (id: string, newNote: string) => void
     onRemove: (id: string) => void
     onPay: (details: any) => void
 }
 
-export default function OrderPanel({ cart, onUpdateQuantity, onRemove, onPay }: OrderPanelProps) {
+export default function OrderPanel({ cart, onUpdateQuantity, onUpdateNote, onRemove, onPay }: OrderPanelProps) {
+    const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+    const [tempNote, setTempNote] = useState('')
     const [orderType, setOrderType] = useState<'DINE_IN' | 'TAKE_AWAY'>('DINE_IN')
     const [customerName, setCustomerName] = useState('')
     const [tableNumber, setTableNumber] = useState('')
@@ -22,7 +25,7 @@ export default function OrderPanel({ cart, onUpdateQuantity, onRemove, onPay }: 
         <aside className="w-[450px] bg-white border-l p-8 flex flex-col h-full shadow-[-10px_0_30px_rgba(0,0,0,0.02)] relative z-10">
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
-                <h2 className="text-2xl font-black text-[#2D3036] tracking-tight">List Order</h2>
+                <h2 className="text-2xl font-black text-[#2D3036] tracking-tight"></h2>
                 <div className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-100 text-[#3b71f3] shadow-sm">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
                 </div>
@@ -97,9 +100,9 @@ export default function OrderPanel({ cart, onUpdateQuantity, onRemove, onPay }: 
                     </div>
                 ) : (
                     cart.map((item) => (
-                        <div key={item.id} className="flex gap-4 group relative">
+                        <div key={item.cartItemId} className="flex gap-4 group relative">
                             <button
-                                onClick={() => onRemove(item.id)}
+                                onClick={() => onRemove(item.cartItemId)}
                                 className="absolute -right-1 -top-1 w-6 h-6 bg-red-50 text-red-400 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white"
                             >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /></svg>
@@ -110,23 +113,73 @@ export default function OrderPanel({ cart, onUpdateQuantity, onRemove, onPay }: 
                             <div className="flex-1 min-w-0">
                                 <h4 className="text-sm font-black text-gray-900 truncate mb-0.5">{item.name}</h4>
                                 <p className="text-[#3b71f3] font-black text-xs mb-3">Rp {item.price.toLocaleString('id-ID')}</p>
-                                <div className="flex items-center gap-2">
-                                    <button className="p-1 text-gray-300 hover:text-[#3b71f3] transition-colors">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-                                    </button>
-                                    <p className="text-[10px] text-gray-400 font-medium truncate italic leading-none">Without egg and tofu</p>
-                                </div>
+
+                                {editingNoteId === item.cartItemId ? (
+                                    <div className="flex flex-col gap-2">
+                                        <textarea
+                                            autoFocus
+                                            value={tempNote}
+                                            onChange={(e) => setTempNote(e.target.value)}
+                                            onBlur={() => {
+                                                onUpdateNote(item.cartItemId, tempNote)
+                                                setEditingNoteId(null)
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && !e.shiftKey) {
+                                                    e.preventDefault()
+                                                    onUpdateNote(item.cartItemId, tempNote)
+                                                    setEditingNoteId(null)
+                                                }
+                                            }}
+                                            placeholder="add notes here (optional)"
+                                            className="w-full bg-gray-50 border border-blue-100 rounded-xl px-3 py-2 text-[10px] font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/10 placeholder:text-gray-300 resize-none"
+                                            rows={2}
+                                        />
+                                        <div className="flex justify-end gap-2">
+                                            <button
+                                                onClick={() => setEditingNoteId(null)}
+                                                className="text-[9px] font-black text-red-400 uppercase tracking-wider"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    onUpdateNote(item.cartItemId, tempNote)
+                                                    setEditingNoteId(null)
+                                                }}
+                                                className="text-[9px] font-black text-[#3b71f3] uppercase tracking-wider"
+                                            >
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div
+                                        className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded-lg p-1 -ml-1 transition-colors group/note"
+                                        onClick={() => {
+                                            setEditingNoteId(item.cartItemId)
+                                            setTempNote(item.note || '')
+                                        }}
+                                    >
+                                        <button className="text-gray-300 group-hover/note:text-[#3b71f3] transition-colors">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                                        </button>
+                                        <p className={`text-[10px] font-medium truncate italic leading-none ${item.note ? 'text-gray-400' : 'text-gray-200'}`}>
+                                            {item.note || 'add notes here (optional)'}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                             <div className="flex items-center gap-3">
                                 <button
-                                    onClick={() => onUpdateQuantity(item.id, -1)}
+                                    onClick={() => onUpdateQuantity(item.cartItemId, -1)}
                                     className="w-7 h-7 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-[#3b71f3] transition-all"
                                 >
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M5 12h14" /></svg>
                                 </button>
                                 <span className="text-sm font-black text-gray-900 w-4 text-center">{item.quantity}</span>
                                 <button
-                                    onClick={() => onUpdateQuantity(item.id, 1)}
+                                    onClick={() => onUpdateQuantity(item.cartItemId, 1)}
                                     className="w-7 h-7 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-[#3b71f3] transition-all"
                                 >
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>

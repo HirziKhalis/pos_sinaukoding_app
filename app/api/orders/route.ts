@@ -35,13 +35,13 @@ export async function POST(request: Request) {
                 data: {
                     orderNumber,
                     customerName,
-                    tableNumber,
+                    tableNumber: String(tableNumber || ''),
                     orderType: orderType || 'DINE_IN',
-                    subTotal,
-                    tax,
-                    total,
-                    receivedAmount: receivedAmount || total,
-                    changeAmount: changeAmount || 0,
+                    subTotal: Number(subTotal || 0),
+                    tax: Number(tax || 0),
+                    total: Number(total || 0),
+                    receivedAmount: Number(receivedAmount || total),
+                    changeAmount: Number(changeAmount || 0),
                     cashierId: user.userId,
                 },
             })
@@ -55,20 +55,32 @@ export async function POST(request: Request) {
                     data: {
                         orderId: createdOrder.id,
                         productId: product.id,
-                        quantity: item.quantity,
-                        price: product.price,
+                        quantity: Number(item.quantity),
+                        price: Number(product.price),
                     },
                 })
 
                 await tx.product.update({
                     where: { id: product.id },
                     data: {
-                        stock: { decrement: item.quantity },
+                        stock: { decrement: Number(item.quantity) },
                     },
                 })
             }
 
-            return createdOrder
+            // Return full order details for receipt
+            return await tx.order.findUnique({
+                where: { id: createdOrder.id },
+                include: {
+                    items: {
+                        include: {
+                            product: {
+                                select: { name: true }
+                            }
+                        }
+                    }
+                }
+            })
         })
 
         return Response.json(order, { status: 201 })

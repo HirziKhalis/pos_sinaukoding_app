@@ -10,32 +10,41 @@ type MenuCardProps = {
     }
     onEdit?: (product: any) => void
     onAdd?: (product: any) => void
+    onClick?: (product: any) => void
 }
 
-export default function MenuCard({ mode = 'CASHIER', product, onEdit, onAdd }: MenuCardProps) {
+export default function MenuCard({ mode = 'CASHIER', product, onEdit, onAdd, onClick }: MenuCardProps) {
     return (
         <div className="bg-white rounded-3xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-all group overflow-hidden h-fit">
-            {/* Image Container with Badge */}
-            <div className="relative h-44 bg-gray-50 rounded-2xl mb-4 overflow-hidden">
-                <img
-                    src={product.imageUrl || "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop"}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div
-                    className="absolute top-3 right-3 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider"
-                    style={{ background: "linear-gradient(to right, #4C3BCF, #3572EF)" }}
-                >
-                    {product.category.toLowerCase()}
+            <div
+                className="cursor-pointer"
+                onClick={(e) => {
+                    e.stopPropagation()
+                    onClick?.(product)
+                }}
+            >
+                {/* Image Container with Badge */}
+                <div className="relative h-44 bg-gray-50 rounded-2xl mb-4 overflow-hidden">
+                    <img
+                        src={product.imageUrl || "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop"}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div
+                        className="absolute top-3 right-3 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider"
+                        style={{ background: "linear-gradient(to right, #4C3BCF, #3572EF)" }}
+                    >
+                        {product.category.toLowerCase()}
+                    </div>
                 </div>
-            </div>
 
-            {/* Content */}
-            <div className="h-28 overflow-hidden mb-2">
-                <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{product.name}</h3>
-                <p className="text-[11px] text-gray-400 line-clamp-3 leading-relaxed">
-                    {product.description || "No description available."}
-                </p>
+                {/* Content */}
+                <div className="h-28 overflow-hidden mb-2">
+                    <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{product.name}</h3>
+                    <p className="text-[11px] text-gray-400 line-clamp-3 leading-relaxed">
+                        {product.description || "No description available."}
+                    </p>
+                </div>
             </div>
 
             {/* Footer */}

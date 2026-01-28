@@ -4,12 +4,20 @@ import { useState, useEffect } from 'react'
 import CategoryTabs from '@/components/cashier/CategoryTabs'
 import MenuCard from '@/components/cashier/MenuCard'
 import OrderPanel from '@/components/cashier/OrderPanel'
+import MenuDetailModal from '@/components/cashier/MenuDetailModal'
+import ReceiptModal from '@/components/cashier/ReceiptModal'
+import { useToast } from '@/context/ToastContext'
 
 export default function DashboardPage() {
+  const { success, error: toastError } = useToast()
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState('all')
   const [cart, setCart] = useState<any[]>([])
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [createdOrder, setCreatedOrder] = useState<any | null>(null)
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false)
 
   useEffect(() => {
     async function fetchProducts() {
@@ -34,24 +42,25 @@ export default function DashboardPage() {
       return cat === active || cat === active.replace(/s$/, '')
     })
 
-  const addToCart = (product: any) => {
+  const addToCart = (product: any, note: string = '') => {
     setCart(currentCart => {
-      const existing = currentCart.find(item => item.id === product.id)
+      const cartItemId = `${product.id}-${note}`
+      const existing = currentCart.find(item => item.cartItemId === cartItemId)
       if (existing) {
         return currentCart.map(item =>
-          item.id === product.id
+          item.cartItemId === cartItemId
             ? { ...item, quantity: item.quantity + 1 }
             : item
         )
       }
-      return [...currentCart, { ...product, quantity: 1 }]
+      return [...currentCart, { ...product, cartItemId, note, quantity: 1 }]
     })
   }
 
-  const updateQuantity = (id: string, delta: number) => {
+  const updateQuantity = (cartItemId: string, delta: number) => {
     setCart(currentCart =>
       currentCart.map(item => {
-        if (item.id === id) {
+        if (item.cartItemId === cartItemId) {
           const newQty = Math.max(1, item.quantity + delta)
           return { ...item, quantity: newQty }
         }
@@ -60,8 +69,19 @@ export default function DashboardPage() {
     )
   }
 
-  const removeFromCart = (id: string) => {
-    setCart(currentCart => currentCart.filter(item => item.id !== id))
+  const removeFromCart = (cartItemId: string) => {
+    setCart(currentCart => currentCart.filter(item => item.cartItemId !== cartItemId))
+  }
+
+  const updateNote = (cartItemId: string, newNote: string) => {
+    setCart(currentCart =>
+      currentCart.map(item => {
+        if (item.cartItemId === cartItemId) {
+          return { ...item, note: newNote }
+        }
+        return item
+      })
+    )
   }
 
   const handlePay = async (details: any) => {
@@ -86,19 +106,22 @@ export default function DashboardPage() {
       })
 
       if (res.ok) {
-        alert('Order placed successfully!')
+        const orderData = await res.json()
+        success('Order placed successfully!')
         setCart([])
+        setCreatedOrder(orderData)
+        setIsReceiptOpen(true)
         // Refresh products to update stock
         const refreshRes = await fetch('/api/menus')
         const newData = await refreshRes.json()
         setProducts(newData)
       } else {
-        const error = await res.text()
-        alert(`Failed to place order: ${error}`)
+        const err = await res.text()
+        toastError(`Failed to place order: ${err}`)
       }
-    } catch (error) {
-      console.error('Payment failed:', error)
-      alert('An error occurred while processing the order.')
+    } catch (err) {
+      console.error('Payment failed:', err)
+      toastError('An error occurred while processing the order.')
     }
   }
 
@@ -132,6 +155,10 @@ export default function DashboardPage() {
                 mode="CASHIER"
                 product={product}
                 onAdd={addToCart}
+                onClick={(p) => {
+                  setSelectedProduct(p)
+                  setIsDetailOpen(true)
+                }}
               />
             ))}
           </div>
@@ -147,8 +174,22 @@ export default function DashboardPage() {
       <OrderPanel
         cart={cart}
         onUpdateQuantity={updateQuantity}
+        onUpdateNote={updateNote}
         onRemove={removeFromCart}
         onPay={handlePay}
+      />
+
+      <MenuDetailModal
+        isOpen={isDetailOpen}
+        product={selectedProduct}
+        onClose={() => setIsDetailOpen(false)}
+        onAdd={addToCart}
+      />
+
+      <ReceiptModal
+        isOpen={isReceiptOpen}
+        onClose={() => setIsReceiptOpen(false)}
+        order={createdOrder}
       />
     </div>
   )
