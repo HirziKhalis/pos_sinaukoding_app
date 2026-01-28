@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useToast } from '@/context/ToastContext'
 
 export default function LoginPage() {
+    const { success, error: toastError } = useToast()
     const router = useRouter()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -29,11 +31,14 @@ export default function LoginPage() {
             const data = await res.json()
 
             if (!res.ok) {
-                setError(data.error || 'Invalid email or password')
+                const msg = data.error || 'Invalid email or password'
+                setError(msg)
+                toastError(msg)
                 setLoading(false)
                 return
             }
 
+            success('Login successful! Redirecting...')
             // Redirect based on role
             if (data.user?.role === 'ADMIN') {
                 router.push('/dashboard/admin')
@@ -42,6 +47,7 @@ export default function LoginPage() {
             }
         } catch (err) {
             setError('Connection failed. Please check your internet.')
+            toastError('Connection failed. Please check your internet.')
             setLoading(false)
         }
     }

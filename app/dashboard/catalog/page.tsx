@@ -11,20 +11,29 @@ export default function CatalogPage() {
     const [loading, setLoading] = useState(true)
     const [activeCategory, setActiveCategory] = useState('all')
 
-    useEffect(() => {
-        async function fetchProducts() {
-            try {
-                const res = await fetch('/api/menus')
-                const data = await res.json()
-                setProducts(data)
-            } catch (err) {
-                console.error(err)
-            } finally {
-                setLoading(false)
-            }
+    const fetchProducts = async () => {
+        try {
+            const res = await fetch('/api/menus')
+            const data = await res.json()
+            setProducts(data)
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setLoading(false)
         }
+    }
+
+    useEffect(() => {
         fetchProducts()
     }, [])
+
+    const filteredProducts = activeCategory === 'all'
+        ? products
+        : products.filter(p => {
+            const cat = p.category.toLowerCase()
+            const active = activeCategory.toLowerCase()
+            return cat === active || cat === active.replace(/s$/, '')
+        })
 
     return (
         <div className="flex h-full bg-[#f8faff]">
@@ -38,7 +47,7 @@ export default function CatalogPage() {
                 <div className="flex items-center justify-between mb-8 mt-4">
                     <h2 className="text-2xl font-bold text-gray-900">List Menu</h2>
                     <p className="text-xs text-gray-400 font-medium tracking-wide">
-                        Total <span className="text-gray-900 font-bold">{products.length} Menu</span>
+                        Total <span className="text-gray-900 font-bold">{filteredProducts.length} Menu</span>
                     </p>
                 </div>
 
@@ -48,9 +57,9 @@ export default function CatalogPage() {
                             <div key={i} className="h-80 bg-gray-100 rounded-[32px]" />
                         ))}
                     </div>
-                ) : products.length > 0 ? (
+                ) : filteredProducts.length > 0 ? (
                     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {products.map((product) => (
+                        {filteredProducts.map((product) => (
                             <MenuCard
                                 key={product.id}
                                 mode="ADMIN"
@@ -67,10 +76,10 @@ export default function CatalogPage() {
                 )}
             </div>
 
-            {/* Admin Action Panel */}
             <ManageMenuPanel
                 editingProduct={editingProduct}
                 onClose={() => setEditingProduct(null)}
+                onSuccess={fetchProducts}
             />
         </div>
     )

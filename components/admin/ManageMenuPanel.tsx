@@ -1,13 +1,16 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
+import { useToast } from '@/context/ToastContext'
 
 type ManageMenuPanelProps = {
     editingProduct?: any
     onClose?: () => void
+    onSuccess?: () => void
 }
 
-export default function ManageMenuPanel({ editingProduct, onClose }: ManageMenuPanelProps) {
+export default function ManageMenuPanel({ editingProduct, onClose, onSuccess }: ManageMenuPanelProps) {
+    const { success, error: toastError, warning } = useToast()
     const [isAdding, setIsAdding] = useState(false)
     const [loading, setLoading] = useState(false)
     const [formData, setFormData] = useState({
@@ -38,12 +41,13 @@ export default function ManageMenuPanel({ editingProduct, onClose }: ManageMenuP
             if (res.ok) {
                 const { imageUrl } = await res.json()
                 setFormData(prev => ({ ...prev, imageUrl }))
+                success('Image uploaded successfully!')
             } else {
-                alert('Failed to upload image')
+                toastError('Failed to upload image')
             }
         } catch (error) {
             console.error('Upload failed:', error)
-            alert('An error occurred during upload')
+            toastError('An error occurred during upload')
         } finally {
             setLoading(false)
         }
@@ -97,11 +101,16 @@ export default function ManageMenuPanel({ editingProduct, onClose }: ManageMenuP
             })
 
             if (res.ok) {
+                success(editingProduct ? 'Menu updated successfully!' : 'Menu created successfully!')
                 if (onClose) onClose()
-                window.location.reload()
+                if (onSuccess) onSuccess()
+            } else {
+                const errData = await res.json().catch(() => ({}))
+                toastError(errData.error || 'Failed to save menu')
             }
         } catch (error) {
             console.error('Failed to save menu:', error)
+            toastError('An error occurred while saving')
         } finally {
             setLoading(false)
         }
@@ -118,11 +127,15 @@ export default function ManageMenuPanel({ editingProduct, onClose }: ManageMenuP
             })
 
             if (res.ok) {
+                success('Menu deleted successfully!')
                 if (onClose) onClose()
-                window.location.reload()
+                if (onSuccess) onSuccess()
+            } else {
+                toastError('Failed to delete menu')
             }
         } catch (error) {
             console.error('Failed to delete menu:', error)
+            toastError('An error occurred while deleting')
         } finally {
             setLoading(false)
         }
@@ -164,16 +177,48 @@ export default function ManageMenuPanel({ editingProduct, onClose }: ManageMenuP
                             <label className="block text-sm font-bold text-gray-400 ml-1 uppercase tracking-wider">Menu Picture</label>
                             <div
                                 onClick={() => fileInputRef.current?.click()}
-                                className="relative h-56 w-full rounded-[32px] overflow-hidden bg-gray-50 border-2 border-dashed border-gray-100 flex items-center justify-center group cursor-pointer"
+                                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-blue-400', 'bg-blue-50/20') }}
+                                onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50/20') }}
+                                onDrop={(e) => {
+                                    e.preventDefault()
+                                    e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50/20')
+                                    const file = e.dataTransfer.files?.[0]
+                                    if (file) {
+                                        const event = { target: { files: [file] } } as any
+                                        handleFileChange(event)
+                                    }
+                                }}
+                                className={`relative h-60 w-full rounded-[32px] overflow-hidden transition-all duration-300 flex flex-col items-center justify-center group cursor-pointer border-2 border-dashed ${formData.imageUrl && !formData.imageUrl.includes('unsplash')
+                                    ? 'border-gray-100 bg-gray-50'
+                                    : 'border-[#3b71f3]/40 bg-white hover:border-[#3b71f3] hover:bg-blue-50/10'
+                                    }`}
                             >
-                                <img
-                                    src={formData.imageUrl}
-                                    alt="Preview"
-                                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                                />
-                                <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span className="bg-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm">Change Image</span>
-                                </div>
+                                {formData.imageUrl && !formData.imageUrl.includes('unsplash') ? (
+                                    <>
+                                        <img
+                                            src={formData.imageUrl}
+                                            alt="Preview"
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="bg-white px-5 py-2.5 rounded-2xl text-xs font-black shadow-xl scale-90 group-hover:scale-100 transition-transform">Change Image</span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col items-center text-center p-6">
+                                        <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3b71f3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                                                <path d="M12 12v9" />
+                                                <path d="m16 16-4-4-4 4" />
+                                            </svg>
+                                        </div>
+                                        <p className="text-gray-500 font-bold text-sm mb-1">Drag and Drop your file here or</p>
+                                        <div className="mt-4 px-8 py-3 bg-[#3b71f3] text-white rounded-2xl text-xs font-black shadow-lg shadow-blue-500/20 group-hover:brightness-110 transition-all">
+                                            Choose File
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <input
                                 type="file"

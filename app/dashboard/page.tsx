@@ -4,12 +4,17 @@ import { useState, useEffect } from 'react'
 import CategoryTabs from '@/components/cashier/CategoryTabs'
 import MenuCard from '@/components/cashier/MenuCard'
 import OrderPanel from '@/components/cashier/OrderPanel'
+import MenuDetailModal from '@/components/cashier/MenuDetailModal'
+import { useToast } from '@/context/ToastContext'
 
 export default function DashboardPage() {
+  const { success, error: toastError } = useToast()
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState('all')
   const [cart, setCart] = useState<any[]>([])
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
 
   useEffect(() => {
     async function fetchProducts() {
@@ -86,19 +91,19 @@ export default function DashboardPage() {
       })
 
       if (res.ok) {
-        alert('Order placed successfully!')
+        success('Order placed successfully!')
         setCart([])
         // Refresh products to update stock
         const refreshRes = await fetch('/api/menus')
         const newData = await refreshRes.json()
         setProducts(newData)
       } else {
-        const error = await res.text()
-        alert(`Failed to place order: ${error}`)
+        const err = await res.text()
+        toastError(`Failed to place order: ${err}`)
       }
-    } catch (error) {
-      console.error('Payment failed:', error)
-      alert('An error occurred while processing the order.')
+    } catch (err) {
+      console.error('Payment failed:', err)
+      toastError('An error occurred while processing the order.')
     }
   }
 
@@ -132,6 +137,10 @@ export default function DashboardPage() {
                 mode="CASHIER"
                 product={product}
                 onAdd={addToCart}
+                onClick={(p) => {
+                  setSelectedProduct(p)
+                  setIsDetailOpen(true)
+                }}
               />
             ))}
           </div>
@@ -149,6 +158,12 @@ export default function DashboardPage() {
         onUpdateQuantity={updateQuantity}
         onRemove={removeFromCart}
         onPay={handlePay}
+      />
+
+      <MenuDetailModal
+        isOpen={isDetailOpen}
+        product={selectedProduct}
+        onClose={() => setIsDetailOpen(false)}
       />
     </div>
   )
