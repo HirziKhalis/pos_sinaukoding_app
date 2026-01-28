@@ -5,6 +5,7 @@ import CategoryTabs from '@/components/cashier/CategoryTabs'
 import MenuCard from '@/components/cashier/MenuCard'
 import OrderPanel from '@/components/cashier/OrderPanel'
 import MenuDetailModal from '@/components/cashier/MenuDetailModal'
+import ReceiptModal from '@/components/cashier/ReceiptModal'
 import { useToast } from '@/context/ToastContext'
 
 export default function DashboardPage() {
@@ -15,6 +16,8 @@ export default function DashboardPage() {
   const [cart, setCart] = useState<any[]>([])
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [createdOrder, setCreatedOrder] = useState<any | null>(null)
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false)
 
   useEffect(() => {
     async function fetchProducts() {
@@ -103,8 +106,11 @@ export default function DashboardPage() {
       })
 
       if (res.ok) {
+        const orderData = await res.json()
         success('Order placed successfully!')
         setCart([])
+        setCreatedOrder(orderData)
+        setIsReceiptOpen(true)
         // Refresh products to update stock
         const refreshRes = await fetch('/api/menus')
         const newData = await refreshRes.json()
@@ -178,6 +184,12 @@ export default function DashboardPage() {
         product={selectedProduct}
         onClose={() => setIsDetailOpen(false)}
         onAdd={addToCart}
+      />
+
+      <ReceiptModal
+        isOpen={isReceiptOpen}
+        onClose={() => setIsReceiptOpen(false)}
+        order={createdOrder}
       />
     </div>
   )

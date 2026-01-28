@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import ReceiptModal from './ReceiptModal'
 
 type OrderArchiveModalProps = {
     isOpen: boolean
@@ -12,6 +13,8 @@ export default function OrderArchiveModal({ isOpen, onClose }: OrderArchiveModal
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
     const [orderType, setOrderType] = useState('all')
+    const [selectedOrder, setSelectedOrder] = useState<any>(null)
+    const [isReceiptOpen, setIsReceiptOpen] = useState(false)
 
     useEffect(() => {
         if (isOpen) {
@@ -129,7 +132,13 @@ export default function OrderArchiveModal({ isOpen, onClose }: OrderArchiveModal
                                         <div className="text-right">
                                             <p className="text-[11px] font-bold text-gray-300">{new Date(order.createdAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(',', '')}</p>
                                         </div>
-                                        <button className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-100 text-[#3b71f3] group-hover:bg-[#3b71f3] group-hover:text-white transition-all shadow-sm">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedOrder(order)
+                                                setIsReceiptOpen(true)
+                                            }}
+                                            className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-100 text-[#3b71f3] group-hover:bg-[#3b71f3] group-hover:text-white transition-all shadow-sm"
+                                        >
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                                         </button>
                                     </div>
@@ -147,6 +156,12 @@ export default function OrderArchiveModal({ isOpen, onClose }: OrderArchiveModal
                     )}
                 </div>
             </div>
+
+            <ReceiptModal
+                isOpen={isReceiptOpen}
+                onClose={() => setIsReceiptOpen(false)}
+                order={selectedOrder}
+            />
         </div>
     )
 }
