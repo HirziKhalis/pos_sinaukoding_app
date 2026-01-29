@@ -1,0 +1,22 @@
+On branch master
+Your branch is behind 'origin/master' by 8 commits, and can be fast-forwarded.
+  (use "git pull" to update your local branch)
+
+You are currently reverting commit a61d911.
+  (fix conflicts and run "git revert --continue")
+  (use "git revert --skip" to skip this patch)
+  (use "git revert --abort" to cancel the revert operation)
+
+Unmerged paths:
+  (use "git restore --staged <file>..." to unstage)
+  (use "git add/rm <file>..." as appropriate to mark resolution)
+	both modified:   app/api/orders/route.ts
+	both modified:   app/dashboard/page.tsx
+	deleted by us:   components/cashier/OrderArchiveModal.tsx
+	both modified:   prisma/dev.db
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	status.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")

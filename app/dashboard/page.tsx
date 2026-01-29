@@ -100,8 +100,8 @@ export default function DashboardPage() {
           subTotal: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
           tax: Math.round(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 0.1),
           total: details.total,
-          receivedAmount: details.total,
-          changeAmount: 0
+          receivedAmount: details.receivedAmount,
+          changeAmount: details.changeAmount
         })
       })
 

@@ -21,6 +21,11 @@ export default function OrderPanel({ cart, onUpdateQuantity, onUpdateNote, onRem
     const tax = Math.round(subtotal * 0.1)
     const total = subtotal + tax
 
+    const [receivedAmount, setReceivedAmount] = useState<number | ''>('')
+    const changeAmount = Number(receivedAmount) >= total ? Number(receivedAmount) - total : 0
+
+    const nominals = [50000, 75000, 100000]
+
     return (
         <aside className="w-[450px] bg-white border-l p-8 flex flex-col h-full shadow-[-10px_0_30px_rgba(0,0,0,0.02)] relative z-10">
             {/* Header */}
@@ -54,163 +59,201 @@ export default function OrderPanel({ cart, onUpdateQuantity, onUpdateNote, onRem
                 </button>
             </div>
 
-            {/* Inputs */}
-            <div className="grid grid-cols-5 gap-4 mb-8">
-                <div className="col-span-3 space-y-2.5">
-                    <label className="text-[11px] font-black text-gray-400 ml-1 uppercase tracking-widest leading-none">Customer Name</label>
-                    <input
-                        type="text"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        placeholder="e.g. Anisa"
-                        className="w-full bg-white border border-gray-100 rounded-2xl px-5 py-4 text-xs font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-gray-300"
-                    />
-                </div>
-                <div className="col-span-2 space-y-2.5">
-                    <label className="text-[11px] font-black text-gray-400 ml-1 uppercase tracking-widest leading-none">No. Table</label>
-                    <div className="relative">
-                        <select
-                            value={tableNumber}
-                            onChange={(e) => setTableNumber(e.target.value)}
-                            className="w-full bg-white border border-gray-100 rounded-2xl px-5 py-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-gray-900 appearance-none"
-                        >
-                            <option value="">Select</option>
-                            {[...Array(20)].map((_, i) => (
-                                <option key={i + 1} value={String(i + 1).padStart(2, '0')}>
-                                    {String(i + 1).padStart(2, '0')}
-                                </option>
-                            ))}
-                        </select>
-                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                        </div>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar pr-2">
+                {/* Inputs */}
+                <div className="grid grid-cols-5 gap-4 mb-8 pt-1">
+                    <div className="col-span-3 space-y-2.5">
+                        <label className="text-[11px] font-black text-gray-400 ml-1 uppercase tracking-widest leading-none">Customer Name</label>
+                        <input
+                            type="text"
+                            value={customerName}
+                            onChange={(e) => setCustomerName(e.target.value)}
+                            placeholder="e.g. Anisa"
+                            className="w-full bg-white border border-gray-100 rounded-2xl px-5 py-4 text-xs font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-gray-300"
+                        />
                     </div>
-                </div>
-            </div>
-
-            {/* Items List */}
-            <div className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar space-y-6">
-                {cart.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-10">
-                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-200"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
-                        </div>
-                        <p className="text-gray-400 font-bold text-sm mb-1">No Menu Selected</p>
-                        <p className="text-gray-300 text-[11px]">Choose some delicious items from the left menu.</p>
-                    </div>
-                ) : (
-                    cart.map((item) => (
-                        <div key={item.cartItemId} className="flex gap-4 group relative">
-                            <button
-                                onClick={() => onRemove(item.cartItemId)}
-                                className="absolute -right-1 -top-1 w-6 h-6 bg-red-50 text-red-400 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white"
+                    <div className="col-span-2 space-y-2.5">
+                        <label className="text-[11px] font-black text-gray-400 ml-1 uppercase tracking-widest leading-none">No. Table</label>
+                        <div className="relative">
+                            <select
+                                value={tableNumber}
+                                onChange={(e) => setTableNumber(e.target.value)}
+                                className="w-full bg-white border border-gray-100 rounded-2xl px-5 py-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-gray-900 appearance-none"
                             >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /></svg>
-                            </button>
-                            <div className="w-20 h-20 rounded-[20px] bg-gray-50 overflow-hidden flex-shrink-0">
-                                <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                                <option value="">Select</option>
+                                {[...Array(20)].map((_, i) => (
+                                    <option key={i + 1} value={String(i + 1).padStart(2, '0')}>
+                                        {String(i + 1).padStart(2, '0')}
+                                    </option>
+                                ))}
+                            </select>
+                            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-black text-gray-900 truncate mb-0.5">{item.name}</h4>
-                                <p className="text-[#3b71f3] font-black text-xs mb-3">Rp {item.price.toLocaleString('id-ID')}</p>
+                        </div>
+                    </div>
+                </div>
 
-                                {editingNoteId === item.cartItemId ? (
-                                    <div className="flex flex-col gap-2">
-                                        <textarea
-                                            autoFocus
-                                            value={tempNote}
-                                            onChange={(e) => setTempNote(e.target.value)}
-                                            onBlur={() => {
-                                                onUpdateNote(item.cartItemId, tempNote)
-                                                setEditingNoteId(null)
-                                            }}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' && !e.shiftKey) {
-                                                    e.preventDefault()
-                                                    onUpdateNote(item.cartItemId, tempNote)
-                                                    setEditingNoteId(null)
-                                                }
-                                            }}
-                                            placeholder="add notes here (optional)"
-                                            className="w-full bg-gray-50 border border-blue-100 rounded-xl px-3 py-2 text-[10px] font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/10 placeholder:text-gray-300 resize-none"
-                                            rows={2}
-                                        />
-                                        <div className="flex justify-end gap-2">
-                                            <button
-                                                onClick={() => setEditingNoteId(null)}
-                                                className="text-[9px] font-black text-red-400 uppercase tracking-wider"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                onClick={() => {
+                {/* Items List */}
+                <div className="space-y-6 mb-8">
+                    {cart.length === 0 ? (
+                        <div className="h-48 flex flex-col items-center justify-center text-center p-10">
+                            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-200"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
+                            </div>
+                            <p className="text-gray-400 font-bold text-sm mb-1">No Menu Selected</p>
+                            <p className="text-gray-300 text-[11px]">Choose some delicious items from the left menu.</p>
+                        </div>
+                    ) : (
+                        cart.map((item) => (
+                            <div key={item.cartItemId} className="flex gap-4 group relative">
+                                <button
+                                    onClick={() => onRemove(item.cartItemId)}
+                                    className="absolute -right-1 -top-1 w-6 h-6 bg-red-50 text-red-400 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white"
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /></svg>
+                                </button>
+                                <div className="w-20 h-20 rounded-[20px] bg-gray-50 overflow-hidden flex-shrink-0">
+                                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="text-sm font-black text-gray-900 truncate mb-0.5">{item.name}</h4>
+                                    <p className="text-[#3b71f3] font-black text-xs mb-3">Rp {item.price.toLocaleString('id-ID')}</p>
+
+                                    {editingNoteId === item.cartItemId ? (
+                                        <div className="flex flex-col gap-2">
+                                            <textarea
+                                                autoFocus
+                                                value={tempNote}
+                                                onChange={(e) => setTempNote(e.target.value)}
+                                                onBlur={() => {
                                                     onUpdateNote(item.cartItemId, tempNote)
                                                     setEditingNoteId(null)
                                                 }}
-                                                className="text-[9px] font-black text-[#3b71f3] uppercase tracking-wider"
-                                            >
-                                                Save
-                                            </button>
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                        e.preventDefault()
+                                                        onUpdateNote(item.cartItemId, tempNote)
+                                                        setEditingNoteId(null)
+                                                    }
+                                                }}
+                                                placeholder="add notes here (optional)"
+                                                className="w-full bg-gray-50 border border-blue-100 rounded-xl px-3 py-2 text-[10px] font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/10 placeholder:text-gray-300 resize-none"
+                                                rows={2}
+                                            />
+                                            <div className="flex justify-end gap-2">
+                                                <button
+                                                    onClick={() => setEditingNoteId(null)}
+                                                    className="text-[9px] font-black text-red-400 uppercase tracking-wider"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        onUpdateNote(item.cartItemId, tempNote)
+                                                        setEditingNoteId(null)
+                                                    }}
+                                                    className="text-[9px] font-black text-[#3b71f3] uppercase tracking-wider"
+                                                >
+                                                    Save
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                ) : (
-                                    <div
-                                        className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded-lg p-1 -ml-1 transition-colors group/note"
-                                        onClick={() => {
-                                            setEditingNoteId(item.cartItemId)
-                                            setTempNote(item.note || '')
-                                        }}
+                                    ) : (
+                                        <div
+                                            className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded-lg p-1 -ml-1 transition-colors group/note"
+                                            onClick={() => {
+                                                setEditingNoteId(item.cartItemId)
+                                                setTempNote(item.note || '')
+                                            }}
+                                        >
+                                            <button className="text-gray-300 group-hover/note:text-[#3b71f3] transition-colors">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                                            </button>
+                                            <p className={`text-[10px] font-medium truncate italic leading-none ${item.note ? 'text-gray-400' : 'text-gray-200'}`}>
+                                                {item.note || 'add notes here (optional)'}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => onUpdateQuantity(item.cartItemId, -1)}
+                                        className="w-7 h-7 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-[#3b71f3] transition-all"
                                     >
-                                        <button className="text-gray-300 group-hover/note:text-[#3b71f3] transition-colors">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-                                        </button>
-                                        <p className={`text-[10px] font-medium truncate italic leading-none ${item.note ? 'text-gray-400' : 'text-gray-200'}`}>
-                                            {item.note || 'add notes here (optional)'}
-                                        </p>
-                                    </div>
-                                )}
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M5 12h14" /></svg>
+                                    </button>
+                                    <span className="text-sm font-black text-gray-900 w-4 text-center">{item.quantity}</span>
+                                    <button
+                                        onClick={() => onUpdateQuantity(item.cartItemId, 1)}
+                                        className="w-7 h-7 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-[#3b71f3] transition-all"
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => onUpdateQuantity(item.cartItemId, -1)}
-                                    className="w-7 h-7 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-[#3b71f3] transition-all"
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M5 12h14" /></svg>
-                                </button>
-                                <span className="text-sm font-black text-gray-900 w-4 text-center">{item.quantity}</span>
-                                <button
-                                    onClick={() => onUpdateQuantity(item.cartItemId, 1)}
-                                    className="w-7 h-7 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-[#3b71f3] transition-all"
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
-                                </button>
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
+                        ))
+                    )}
+                </div>
 
-            {/* Price Breakdown */}
-            <div className="mt-8 space-y-4 pt-8 border-t border-dashed border-gray-100">
-                <div className="flex justify-between items-center text-xs font-bold">
-                    <span className="text-gray-400">Sub Total</span>
-                    <span className="text-gray-900">Rp {subtotal.toLocaleString('id-ID')}</span>
+                {/* Price Breakdown */}
+                <div className="mt-auto space-y-4 pt-8 border-t border-dashed border-gray-100">
+                    <div className="flex justify-between items-center text-xs font-bold">
+                        <span className="text-gray-400">Sub Total</span>
+                        <span className="text-gray-900">Rp {subtotal.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs font-bold">
+                        <span className="text-gray-400">Tax</span>
+                        <span className="text-gray-900">Rp {tax.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-4">
+                        <span className="text-lg font-black text-gray-900">Total</span>
+                        <span className="text-2xl font-black text-gray-900 tracking-tight">Rp {total.toLocaleString('id-ID')}</span>
+                    </div>
                 </div>
-                <div className="flex justify-between items-center text-xs font-bold">
-                    <span className="text-gray-400">Tax</span>
-                    <span className="text-gray-900">Rp {tax.toLocaleString('id-ID')}</span>
-                </div>
-                <div className="flex justify-between items-center pt-4">
-                    <span className="text-lg font-black text-gray-900">Total</span>
-                    <span className="text-2xl font-black text-gray-900 tracking-tight">Rp {total.toLocaleString('id-ID')}</span>
+
+                {/* Select Nominal Section */}
+                <div className="mt-8 space-y-4 pb-4">
+                    <label className="text-[11px] font-black text-gray-400 ml-1 uppercase tracking-widest leading-none">Select Nominal</label>
+                    <div className="flex gap-3">
+                        {nominals.map((nom) => (
+                            <button
+                                key={nom}
+                                onClick={() => setReceivedAmount(nom)}
+                                className={`flex-1 py-4 rounded-xl border text-[11px] font-bold transition-all ${receivedAmount === nom
+                                    ? 'border-[#3b71f3] text-[#3b71f3] bg-blue-50/50'
+                                    : 'border-gray-200 text-gray-400 hover:border-blue-200'
+                                    }`}
+                            >
+                                Rp {nom.toLocaleString('id-ID')}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="pt-4 border-b border-gray-50 pb-4">
+                        <input
+                            type="number"
+                            placeholder="Enter Nominal here..."
+                            value={receivedAmount}
+                            onChange={(e) => setReceivedAmount(e.target.value === '' ? '' : parseInt(e.target.value))}
+                            className="w-full text-center text-xs font-black text-gray-900 focus:outline-none placeholder:text-gray-200 bg-transparent"
+                        />
+                    </div>
                 </div>
             </div>
 
             {/* Pay Button */}
             <button
-                disabled={cart.length === 0}
-                onClick={() => onPay({ orderType, customerName, tableNumber, total })}
-                className={`w-full py-5 rounded-[24px] font-black text-sm mt-8 transition-all active:scale-[0.98] ${cart.length > 0
+                disabled={cart.length === 0 || Number(receivedAmount) < total}
+                onClick={() => onPay({
+                    orderType,
+                    customerName,
+                    tableNumber,
+                    total,
+                    receivedAmount: Number(receivedAmount),
+                    changeAmount
+                })}
+                className={`w-full py-5 rounded-[24px] font-black text-sm mt-8 transition-all active:scale-[0.98] ${cart.length > 0 && Number(receivedAmount) >= total
                     ? 'bg-[#3b71f3] text-white shadow-xl shadow-blue-500/20 hover:brightness-110'
                     : 'bg-gray-100 text-gray-300 cursor-not-allowed'
                     }`}

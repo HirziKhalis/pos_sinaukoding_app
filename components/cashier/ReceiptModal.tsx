@@ -149,11 +149,11 @@ export default function ReceiptModal({ isOpen, onClose, order }: ReceiptModalPro
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center text-[11px] font-bold">
                                     <span className="text-gray-400 uppercase tracking-widest">Diterima</span>
-                                    <span className="text-gray-700">Rp {order.receivedAmount?.toLocaleString('id-ID')}</span>
+                                    <span className="text-gray-700">Rp {(order.receivedAmount ?? order.total).toLocaleString('id-ID')}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-[11px] font-bold">
                                     <span className="text-gray-400 uppercase tracking-widest">Kembalian</span>
-                                    <span className="text-gray-700">Rp {order.changeAmount?.toLocaleString('id-ID')}</span>
+                                    <span className="text-gray-700">Rp {(order.changeAmount ?? 0).toLocaleString('id-ID')}</span>
                                 </div>
                             </div>
                         </div>
