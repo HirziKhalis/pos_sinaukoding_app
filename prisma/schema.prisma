@@ -24,6 +24,9 @@ model User {
   updatedAt    DateTime @updatedAt
 
   orders Order[]
+
+  resetToken       String?
+  resetTokenExpiry DateTime?
 }
 
 model Product {

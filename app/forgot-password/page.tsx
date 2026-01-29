@@ -19,15 +19,13 @@ export default function ForgotPasswordPage() {
 
         // Simulate API call for now or implement if route exists
         try {
-            // For now, let's just simulate a success message
-            // const res = await fetch('/api/auth/forgot-password', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({ email }),
-            // })
+            const res = await fetch('/api/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            })
 
-            // Artificial delay
-            await new Promise(resolve => setTimeout(resolve, 1500))
+            if (!res.ok) throw new Error('Failed to send request')
 
             setSuccess('If an account exists for this email, you will receive a password reset link shortly.')
         } catch (err) {
