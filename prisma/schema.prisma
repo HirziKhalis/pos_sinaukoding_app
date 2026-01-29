@@ -9,8 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // Uses Vercel's pooling URL
+  directUrl = env("POSTGRES_URL_NON_POOLING") // Uses Vercel's direct URL
 }
 
 model User {
@@ -47,10 +48,10 @@ model Product {
 
 model Order {
   id           String  @id @default(uuid())
-  orderNumber  String  @unique // e.g. ORDR#1234567890
+  orderNumber  String  @unique
   customerName String
   tableNumber  String?
-  orderType    String  @default("DINE_IN") // DINE_IN, TAKE_AWAY
+  orderType    String  @default("DINE_IN")
 
   subTotal       Int
   tax            Int
