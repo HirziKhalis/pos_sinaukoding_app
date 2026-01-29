@@ -15,9 +15,11 @@ export default function SalesReportPage() {
     const [metrics, setMetrics] = useState<any | null>(null)
     const [orders, setOrders] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     const fetchReportData = useCallback(async () => {
         setLoading(true)
+        setError(null)
         try {
             const params = new URLSearchParams()
             if (startDate) params.append('startDate', startDate.toISOString())
@@ -30,9 +32,13 @@ export default function SalesReportPage() {
                 const data = await res.json()
                 setMetrics(data.metrics)
                 setOrders(data.orders)
+            } else {
+                const text = await res.text()
+                setError(`Failed to fetch report: ${res.status} ${text}`)
             }
-        } catch (error) {
-            console.error('Failed to fetch report data:', error)
+        } catch (err: any) {
+            console.error('Failed to fetch report data:', err)
+            setError(`Error: ${err.message || 'Unknown error'}`)
         } finally {
             setLoading(false)
         }
@@ -44,7 +50,15 @@ export default function SalesReportPage() {
 
     return (
         <div className="p-8 space-y-8 bg-[#f8faff] min-h-full">
-            <ReportHeader />
+            <ReportHeader loading={loading} ordersCount={orders.length} />
+
+            {error && (
+                <div className="bg-red-50 border border-red-100 text-red-600 px-6 py-4 rounded-2xl text-sm font-bold flex items-center gap-3">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12" y1="16" y2="16" /></svg>
+                    {error}
+                </div>
+            )}
+
             <MetricsGrid metrics={metrics} />
             <FiltersBar
                 startDate={startDate}

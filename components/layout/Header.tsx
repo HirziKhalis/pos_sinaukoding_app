@@ -7,17 +7,23 @@ import OrderArchiveModal from '@/components/cashier/OrderArchiveModal'
 export default function Header() {
     const router = useRouter()
     const [isArchiveOpen, setIsArchiveOpen] = useState(false)
-    const [user, setUser] = useState<{ role: string, name: string }>({ role: '', name: 'John Doe' })
+    const [user, setUser] = useState<any>(null)
 
     useEffect(() => {
-        const cookies = document.cookie.split('; ')
-        const roleCookie = cookies.find(row => row.startsWith('role='))
-        const nameCookie = cookies.find(row => row.startsWith('user_name=')) // Fallback if name is in cookie
-
-        if (roleCookie) {
-            setUser(prev => ({ ...prev, role: roleCookie.split('=')[1] }))
-        }
+        fetchUser()
     }, [])
+
+    const fetchUser = async () => {
+        try {
+            const res = await fetch('/api/auth/me')
+            if (res.ok) {
+                const data = await res.json()
+                setUser(data)
+            }
+        } catch (err) {
+            console.error('Failed to fetch user:', err)
+        }
+    }
 
     async function handleLogout() {
         try {
@@ -33,6 +39,10 @@ export default function Header() {
             console.error('Logout failed:', error)
         }
     }
+
+    const initials = user?.name
+        ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+        : (user?.email?.[0]?.toUpperCase() || 'U')
 
     return (
         <header className="h-18 bg-white border-b flex items-center justify-between px-6">
@@ -51,7 +61,7 @@ export default function Header() {
 
             <div className="flex items-center gap-6">
                 {/* Order Archive */}
-                {user.role === 'CASHIER' && (
+                {user?.role === 'CASHIER' && (
                     <button
                         onClick={() => setIsArchiveOpen(true)}
                         className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors"
@@ -69,15 +79,19 @@ export default function Header() {
                 {/* User Profile */}
                 <div className="flex items-center gap-3">
                     <div className="text-right">
-                        <p className="text-sm font-bold text-gray-900 leading-none">{user.name}</p>
-                        <p className="text-[10px] text-gray-400 font-medium mt-1 capitalize">{user.role?.toLowerCase() || 'User'}</p>
+                        <p className="text-sm font-bold text-gray-900 leading-none">{user?.name || user?.email?.split('@')[0] || 'User'}</p>
+                        <p className="text-[10px] text-gray-400 font-medium mt-1 capitalize">{user?.role?.toLowerCase() || 'User'}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden ring-2 ring-gray-50">
-                        <img
-                            src="https://api.dicebear.com/7.x/avataaars/svg?seed=John"
-                            alt="User"
-                            className="w-full h-full object-cover"
-                        />
+                    <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden ring-2 ring-gray-50 flex items-center justify-center">
+                        {user?.imageUrl ? (
+                            <img
+                                src={user.imageUrl}
+                                alt="User"
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <span className="text-xs font-black text-gray-300">{initials}</span>
+                        )}
                     </div>
                 </div>
 
@@ -98,4 +112,3 @@ export default function Header() {
         </header>
     )
 }
-

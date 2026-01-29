@@ -6,9 +6,8 @@ import { startOfDay, endOfDay } from 'date-fns'
 export async function GET(request: Request) {
     return withApiGuard(async () => {
         const user = await requireAuth()
-        if (user.role !== 'ADMIN') {
-            return new Response('Unauthorized', { status: 403 })
-        }
+        const isAdmin = user.role === 'ADMIN'
+
 
         const { searchParams } = new URL(request.url)
         const startDateParam = searchParams.get('startDate')
@@ -19,12 +18,18 @@ export async function GET(request: Request) {
         const startDate = startDateParam ? startOfDay(new Date(startDateParam)) : startOfDay(new Date())
         const endDate = endDateParam ? endOfDay(new Date(endDateParam)) : endOfDay(new Date())
 
+
         const whereClause: any = {
             createdAt: {
                 gte: startDate,
                 lte: endDate,
             },
         }
+
+        if (!isAdmin) {
+            whereClause.cashierId = user.userId
+        }
+
 
         if (orderType && orderType !== 'ALL') {
             whereClause.orderType = orderType

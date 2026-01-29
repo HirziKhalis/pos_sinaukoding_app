@@ -1,37 +1,39 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { writeFile } from 'fs/promises'
+import { withApiGuard } from '@/lib/api'
+import { requireAuth } from '@/lib/auth'
+import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
-import { randomUUID } from 'crypto'
+import { v4 as uuidv4 } from 'uuid'
 
-export async function POST(request: NextRequest) {
-    try {
+export async function POST(request: Request) {
+    return withApiGuard(async () => {
+        await requireAuth()
+
         const formData = await request.formData()
         const file = formData.get('file') as File | null
 
         if (!file) {
-            return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
+            return new Response('No file uploaded', { status: 400 })
         }
 
         const bytes = await file.arrayBuffer()
         const buffer = Buffer.from(bytes)
 
-        // Create a unique filename
-        const fileExtension = file.name.split('.').pop()
-        const fileName = `${randomUUID()}.${fileExtension}`
+        // Ensure the directory exists
+        const uploadDir = join(process.cwd(), 'public/uploads')
+        try {
+            await mkdir(uploadDir, { recursive: true })
+        } catch (err) {
+            // Directory might already exist
+        }
 
-        // Define paths
-        const publicDir = join(process.cwd(), 'public')
-        const uploadDir = join(publicDir, 'uploads')
-        const filePath = join(uploadDir, fileName)
+        const uniqueFileName = `${uuidv4()}-${file.name.replace(/\s+/g, '-')}`
+        const path = join(uploadDir, uniqueFileName)
 
-        // Write the file
-        await writeFile(filePath, buffer)
+        await writeFile(path, buffer)
 
-        // Return the relative URL
-        const imageUrl = `/uploads/${fileName}`
-        return NextResponse.json({ imageUrl })
-    } catch (error) {
-        console.error('Upload error:', error)
-        return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
-    }
+        return Response.json({
+            url: `/uploads/${uniqueFileName}`,
+            name: uniqueFileName
+        })
+    })
 }
