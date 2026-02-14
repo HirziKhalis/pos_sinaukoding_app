@@ -26,11 +26,21 @@ export default function AccountSection({ user, onUserUpdate, onNameChange }: Acc
         const file = e.target.files?.[0]
         if (!file) return
 
+        // Validate File Size (800KB)
+        const MAX_SIZE = 800 * 1024
+        if (file.size > MAX_SIZE) {
+            showError('File is too large! Maximum size allowed is 800KB.')
+            if (fileInputRef.current) fileInputRef.current.value = ''
+            return
+        }
+
         setUploading(true)
         const formData = new FormData()
         formData.append('file', file)
 
         try {
+            const oldImageUrl = user?.imageUrl
+
             const uploadRes = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData,
@@ -49,6 +59,16 @@ export default function AccountSection({ user, onUserUpdate, onNameChange }: Acc
 
             const updatedUser = await profileRes.json()
             onUserUpdate(updatedUser)
+
+            // Clean up old image from blob storage
+            if (oldImageUrl && oldImageUrl.includes('blob.vercel-storage.com')) {
+                fetch('/api/upload', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: oldImageUrl }),
+                }).catch(err => console.error('Failed to cleanup old image:', err))
+            }
+
             success('Profile picture updated successfully!')
         } catch (err: any) {
             showError(err.message || 'Something went wrong')
@@ -59,6 +79,7 @@ export default function AccountSection({ user, onUserUpdate, onNameChange }: Acc
 
     const handleDeletePicture = async () => {
         try {
+            const oldImageUrl = user?.imageUrl
             const profileRes = await fetch('/api/user/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -69,6 +90,16 @@ export default function AccountSection({ user, onUserUpdate, onNameChange }: Acc
 
             const updatedUser = await profileRes.json()
             onUserUpdate(updatedUser)
+
+            // Clean up old image from blob storage
+            if (oldImageUrl && oldImageUrl.includes('blob.vercel-storage.com')) {
+                fetch('/api/upload', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: oldImageUrl }),
+                }).catch(err => console.error('Failed to cleanup old image:', err))
+            }
+
             success('Profile picture removed')
         } catch (err: any) {
             showError(err.message)

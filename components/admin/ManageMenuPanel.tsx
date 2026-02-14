@@ -28,19 +28,38 @@ export default function ManageMenuPanel({ editingProduct, onClose, onSuccess }: 
         const file = e.target.files?.[0]
         if (!file) return
 
+        // Validate File Size (800KB)
+        const MAX_SIZE = 800 * 1024
+        if (file.size > MAX_SIZE) {
+            toastError('File is too large! Maximum size allowed is 800KB.')
+            if (fileInputRef.current) fileInputRef.current.value = ''
+            return
+        }
+
         setLoading(true)
         const uploadData = new FormData()
         uploadData.append('file', file)
 
         try {
+            const previousImageUrl = formData.imageUrl
             const res = await fetch('/api/upload', {
                 method: 'POST',
                 body: uploadData,
             })
 
             if (res.ok) {
-                const { imageUrl } = await res.json()
-                setFormData(prev => ({ ...prev, imageUrl }))
+                const { url } = await res.json()
+                setFormData(prev => ({ ...prev, imageUrl: url }))
+
+                // Clean up previous image if it was a blob URL
+                if (previousImageUrl && previousImageUrl.includes('blob.vercel-storage.com')) {
+                    fetch('/api/upload', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: previousImageUrl }),
+                    }).catch(err => console.error('Failed to cleanup old image:', err))
+                }
+
                 success('Image uploaded successfully!')
             } else {
                 toastError('Failed to upload image')
@@ -122,11 +141,20 @@ export default function ManageMenuPanel({ editingProduct, onClose, onSuccess }: 
 
         setLoading(true)
         try {
+            const imageUrl = editingProduct.imageUrl
             const res = await fetch(`/api/products/${editingProduct.id}`, {
                 method: 'DELETE'
             })
 
             if (res.ok) {
+                // Clean up image from blob storage
+                if (imageUrl && imageUrl.includes('blob.vercel-storage.com')) {
+                    fetch('/api/upload', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: imageUrl }),
+                    }).catch(err => console.error('Failed to cleanup image:', err))
+                }
                 success('Menu deleted successfully!')
                 if (onClose) onClose()
                 if (onSuccess) onSuccess()
